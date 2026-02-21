@@ -246,3 +246,6 @@ The schema is designed to be extensible for:
 ## License
 
 MIT
+
+
+## Developed by Niharika Ramishetty.
