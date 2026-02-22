@@ -58,7 +58,7 @@ export const getAllUsers = query({
   args: { currentUserId: v.id("users") },
   handler: async (ctx, args) => {
     const users = await ctx.db.query("users").collect();
-    return users.filter((user) => user._id !== args.currentUserId);
+    return users.filter((user) => user._id !== args.currentUserId && user.clerkId);
   },
 });
 
