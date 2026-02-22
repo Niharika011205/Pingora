@@ -2,19 +2,31 @@
 
 import { UserButton } from "@clerk/nextjs";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { MessageSquare, Moon, Sun } from "lucide-react";
+import { MessageSquare, Moon, Sun, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function Navbar() {
   const { user } = useCurrentUser();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const deleteUser = useMutation(api.users.deleteUser);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleDeleteAccount = async () => {
+    if (user?.clerkId) {
+      await deleteUser({ clerkId: user.clerkId });
+      setShowDeleteConfirm(false);
+    }
+  };
 
   return (
     <nav className="border-b bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50">
@@ -54,6 +66,16 @@ export function Navbar() {
             </Button>
           )}
 
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-muted-foreground hover:text-destructive"
+            title="Delete account"
+          >
+            <Trash2 className="h-5 w-5" />
+          </Button>
+
           <UserButton
             afterSignOutUrl="/sign-in"
             appearance={{
@@ -62,6 +84,26 @@ export function Navbar() {
               },
             }}
           />
+
+          {/* Delete Account Confirmation Dialog */}
+          <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Account</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete your account? All your messages, conversations, and data will be permanently deleted. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={handleDeleteAccount}>
+                  Delete Account
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </nav>

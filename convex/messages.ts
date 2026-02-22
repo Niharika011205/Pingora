@@ -189,6 +189,23 @@ export const deleteMessage = mutation({
   },
 });
 
+// Clear all messages in a conversation
+export const clearConversation = mutation({
+  args: { conversationId: v.id("conversations") },
+  handler: async (ctx, args) => {
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .collect();
+
+    for (const message of messages) {
+      await ctx.db.patch(message._id, {
+        isDeleted: true,
+      });
+    }
+  },
+});
+
 // Add reaction to message
 export const addReaction = mutation({
   args: {

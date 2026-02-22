@@ -55,7 +55,8 @@ export default defineSchema({
     expiresAt: v.number(),
   })
     .index("by_conversation", ["conversationId"])
-    .index("by_expires", ["expiresAt"]),
+    .index("by_expires", ["expiresAt"])
+    .index("by_user", ["userId", "_creationTime"]),
 
   lastRead: defineTable({
     conversationId: v.id("conversations"),

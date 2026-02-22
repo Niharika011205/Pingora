@@ -97,6 +97,54 @@ export const deleteUser = mutation({
       .unique();
 
     if (user) {
+      // Delete all messages sent by this user
+      const userMessages = await ctx.db
+        .query("messages")
+        .withIndex("by_sender", (q) => q.eq("senderId", user._id))
+        .collect();
+
+      for (const message of userMessages) {
+        await ctx.db.delete(message._id);
+      }
+
+      // Delete all conversations where this user is a member
+      const conversations = await ctx.db.query("conversations").collect();
+      for (const conv of conversations) {
+        if (conv.members.includes(user._id)) {
+          // Delete all messages in the conversation
+          const convMessages = await ctx.db
+            .query("messages")
+            .withIndex("by_conversation", (q) => q.eq("conversationId", conv._id))
+            .collect();
+
+          for (const msg of convMessages) {
+            await ctx.db.delete(msg._id);
+          }
+
+          await ctx.db.delete(conv._id);
+        }
+      }
+
+      // Delete user's last read records
+      const lastReads = await ctx.db
+        .query("lastRead")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect();
+
+      for (const lastRead of lastReads) {
+        await ctx.db.delete(lastRead._id);
+      }
+
+      // Delete user's typing indicators
+      const typingIndicators = await ctx.db
+        .query("typingIndicators")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect();
+
+      for (const typing of typingIndicators) {
+        await ctx.db.delete(typing._id);
+      }
+
       await ctx.db.delete(user._id);
     }
   },
